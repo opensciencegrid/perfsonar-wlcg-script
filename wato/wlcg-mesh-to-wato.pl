@@ -45,6 +45,24 @@ my %LocLong  = ();
 my %LocCountry  = ();
 my %PSVersion  = ();
 my %LookupWorked =  ();
+my %notpingable = ();
+$notpingable{"ps001.gla.scotgrid.ac.uk"} =  1;
+$notpingable{"ps002.gla.scotgrid.ac.uk"} =  1;
+$notpingable{"lcg-sonar01.hep.ucl.ac.uk"} =  1;
+$notpingable{"hepsonar1.ph.liv.ac.uk"} =  1;
+$notpingable{"hepsonar2.ph.liv.ac.uk"} =  1;
+$notpingable{"grid-perfsonar.hpc.susx.ac.uk"} =  1;
+$notpingable{"dc2-grid-ps-00.brunel.ac.uk"} =  1;
+$notpingable{"perfbw.ciemat.es"} =  1;
+$notpingable{"perflat.ciemat.es"} =  1;
+$notpingable{"perfsonar-ps-bandwidth.igfae.usc.es"} =  1;
+$notpingable{"perfsonar-ps-latency.igfae.usc.es"} =  1;
+$notpingable{"psonar1.lal.in2p3.fr"} =  1;
+my %checkmkagent = ();
+$checkmkagent{"psum01.aglt2.org"} =  1;
+$checkmkagent{"psum02.aglt2.org"} =  1;
+$checkmkagent{"psmsu01.aglt2.org"} =  1;
+$checkmkagent{"psmsu02.aglt2.org"} =  1;
 
 # First create  some  groups we  want to  have:
 system("sed  -i  \"/define_hostgroups = {}/a define_hostgroups.update\({'Latency': u'Latency perfSONAR-PS Toolkit nodes'}\)\" groups.mk");
@@ -216,7 +234,16 @@ foreach my $cloud (  keys %WLCGURLS )  {
 		    }
 			
 		} else {
-		    $hostline{$member} =   "\"$member|cmk-agent|prod|perfsonar|$cloud|$tt|wan|tcp|wato|/\" + FOLDER_PATH + \"/\","
+# Initial  hostline
+		    $hostline{$member} =   "\"$member|ping|prod|perfsonar|$cloud|$tt|wan|wato|/\" + FOLDER_PATH + \"/\",";
+		    # Hosts not  pingable
+		    if  (exists $notpingable{$member})  {
+			$hostline{$member} =~ s/ping\|/no-ping\|/;
+		    } 
+		    # Hosts  that  have  installed  check_mk_agent
+		    if  (exists $checkmkagent{$member})  {
+			$hostline{$member} =~ s/prod\|/tcp\|prod\|/;
+		    }
 		}
 	    }
 	} elsif ( $type  eq  "disjoint" )  {
@@ -233,14 +260,14 @@ foreach my $cloud (  keys %WLCGURLS )  {
 }    
 #  Now  we  have loaded  $hostline for  each  found  host...dump  it
 print  "  Insert the following  in  <SiteRoot>/etc/check_mk/conf.d/wato/hosts.mk:\n";
-open(OUT,">hosts-add.mk")  or  die  "Unable  to  open  hosts-add.mk:  $!\n";
+open(OUT,">hosts-add.mk.last")  or  die  "Unable  to  open  hosts-add.mk.last:  $!\n";
 print OUT "all_hosts += [\n";
 foreach my $member  (keys  %hostline)  {
     print  OUT " $hostline{$member}\n"
 }
 print OUT "]\n";
 close(OUT);
-print  "  Insert  hosts-add.mk  into  hosts.mk\n\nDone!\n";
+print  "  Insert  hosts-add.mk.last  into  hosts.mk\n\nDone!\n";
 
 # Now  write out  "extra-config"  stanzas
 # Latitude

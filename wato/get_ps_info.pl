@@ -25,7 +25,10 @@ sub get_ps_info (\%){
     my $ActivehLSURL="http://ps1.es.net:8096/lookup/activehosts.json";
 
     my $json = get( $ActivehLSURL ); 
-    warn "Could not get $ActivehLSURL!"  unless  defined  $json;
+    if  (  !  defined  $json )  {
+	warn "Could not get ${ActivehLSURL}!\n";
+	return 2;
+    }
 
     my $decoded_json = decode_json($json);
 #  Use the line below  to  understand  the  JSON  data structure.  Comment out when done
@@ -50,37 +53,40 @@ sub get_ps_info (\%){
 	$debug  && print  "  Trying  locator  $i...\n";
 	my $URL =  $Locators[$i]."?host-name=$HostToFind";
 	my $hostjson = get( $URL ); 
-	warn "Could not get $ActivehLSURL!"  unless  defined  $hostjson;
-	my $decoded_hostjson = decode_json($hostjson);
+	if  ( ! defined  $hostjson )  {
+	    $debug && warn "Could not get $URL!\n";
+	} else {
+	    my $decoded_hostjson = decode_json($hostjson);
 # Check to  see if  array $decoded_hostjson  has any  entries; -1 for none
-	my  $len =  $#{$decoded_hostjson};
-	$debug  && print " len  =  $len\n";
-	if  ($len >= 0 ) {
-	    $debug && print "  Found  for  $Locators[$i] $decoded_hostjson ".":\n";
+	    my  $len =  $#{$decoded_hostjson};
+	    $debug  && print " len  =  $len\n";
+	    if  ($len >= 0 ) {
+		$debug && print "  Found  for  $Locators[$i] $decoded_hostjson ".":\n";
 #	print Dumper $decoded_hostjson;
 # Get 0th element of  array  which is a  pointer  to  a hash
-	    my $hashpointer = ${$decoded_hostjson}[0];
+		my $hashpointer = ${$decoded_hostjson}[0];
 #	print  "  hashpointer  $hashpointer\n";
-	    foreach my $key (  keys %{$hashpointer} ) {
-		$debug && print  "  key =  $key\n";
-		if ($key eq "ttl" ||  $key eq  "uri" ||  $key eq "expires" ) {
-		    $hhptr->{$key} =  ${$hashpointer}{$key};
-		    $debug  && print  "  Found  $key with value ".$hhptr->{$key}."\n";
-		}  else  {
+		foreach my $key (  keys %{$hashpointer} ) {
+		    $debug && print  "  key =  $key\n";
+		    if ($key eq "ttl" ||  $key eq  "uri" ||  $key eq "expires" ) {
+			$hhptr->{$key} =  ${$hashpointer}{$key};
+			$debug  && print  "  Found  $key with value ".$hhptr->{$key}."\n";
+		    }  else  {
 #  Check  if  the array has more than  one  entry
-		    my  $arrlen = $#{${$hashpointer}{$key}};
-		    if  ($arrlen ==  0)  {
-			$hhptr->{$key} =  ${$hashpointer}{$key}[0];
-			$debug && print  "  Found  $key with value $hhptr->{$key}\n";
-		    } else  {
-			for  (my $i=0;$i<=$arrlen;$i++) {
-			    $hhptr->{$key.$i} =  ${$hashpointer}{$key}[$i];
-			    $debug && print  "  Found  $key$i with value $hhptr->{$key.$i}\n";
+			my  $arrlen = $#{${$hashpointer}{$key}};
+			if  ($arrlen ==  0)  {
+			    $hhptr->{$key} =  ${$hashpointer}{$key}[0];
+			    $debug && print  "  Found  $key with value $hhptr->{$key}\n";
+			} else  {
+			    for  (my $i=0;$i<=$arrlen;$i++) {
+				$hhptr->{$key.$i} =  ${$hashpointer}{$key}[$i];
+				$debug && print  "  Found  $key$i with value $hhptr->{$key.$i}\n";
+			    }
 			}
 		    }
 		}
+		$debug && print  "\n";
 	    }
-	    $debug && print  "\n";
 	}
     }
 }
