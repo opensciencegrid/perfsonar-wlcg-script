@@ -205,7 +205,7 @@ foreach my $cloud (  keys %WLCGURLS )  {
 			    $LocLong{$member}=$Longitude;
 			}
 			my  $PSVersion = '';
-			if  ($page =~ /<tr><td><a rel="external" target="_blank" href="http:\/\/psps.perfsonar.net\/toolkit\/">pS-Performance Toolkit<\/a><\/td><td>([\.\d]+)/) {
+			if  ($page =~ />pS-Performance Toolkit<\/a><\/td><td>([\.\d]+)/) {
 			    $PSVersion = $1;
 			} else {
 			    warn  "Unable  to  find PS  Version  for  $member\n"
