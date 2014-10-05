@@ -2,6 +2,8 @@
 #
 #  Script to parse v3.4 info JSON from perfSONAR-PS host
 #
+#  Example use :  ./parse-host34-info.pl  ps-lat.aglt2.org
+#
 #  Initial  version  from  Shawn  McKee  <smckee@umich.edu>
 #  October  5, 2014
 #################################################################################
